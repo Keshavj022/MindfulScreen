@@ -182,39 +182,28 @@ def signup():
             'marketing_consent': marketing_consent
         }
 
-        # Skip email verification for demo account
-        if email == 'demo@mindfulscreen.com':
-            # Create user account directly
-            user = User(
-                name=name,
-                email=email,
-                phone=full_phone,
-                age=int(age) if age else None,
-                gender=gender,
-                occupation=occupation,
-                location=location,
-                email_verified=True,
-                terms_accepted_at=datetime.utcnow(),
-                privacy_accepted_at=datetime.utcnow(),
-                marketing_consent=marketing_consent
-            )
-            user.set_password(password)
+        user = User(
+            name=name,
+            email=email,
+            phone=full_phone,
+            age=int(age) if age else None,
+            gender=gender,
+            occupation=occupation,
+            location=location,
+            email_verified=True,  # Skip verification for now
+            terms_accepted_at=datetime.utcnow(),
+            privacy_accepted_at=datetime.utcnow(),
+            marketing_consent=marketing_consent
+        )
+        user.set_password(password)
 
-            db.session.add(user)
-            db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-            # Log in user
-            login_user(user)
-            flash('Demo account created successfully!', 'success')
-            return redirect(url_for('quiz.start'))
-
-        # Send OTP email for regular users
-        email_service = get_email_service()
-        if email_service.send_otp_email(email, name):
-            flash('A verification code has been sent to your email', 'success')
-            return redirect(url_for('auth.verify_email'))
-        else:
-            flash('Failed to send verification email. Please try again.', 'danger')
+        # Log in user
+        login_user(user)
+        flash('Account created successfully! Welcome to MindfulScreen.', 'success')
+        return redirect(url_for('quiz.start'))
 
     return render_template('auth/signup.html')
 
