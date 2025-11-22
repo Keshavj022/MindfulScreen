@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="MindfulScreen" height="60" class="mb-3">
+            <h2>Email Not Verified</h2>
+            <p class="text-muted">Your email address needs verification</p>
+        </div>
+
+        <div class="email-info mb-4">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Account Found:</strong> The email <span class="email-highlight">{{ email }}</span> is registered but not verified.
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <p class="text-center mb-4">Click below to send a new verification email.</p>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="resendBtn">
+                <i class="fas fa-paper-plane me-2"></i>Send Verification Email
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <p class="small text-muted mb-3">
+                <i class="fas fa-info-circle me-1"></i>
+                Check your inbox and spam folder for the verification email.
+            </p>
+        </div>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('auth.login') }}" class="text-muted">
+                <i class="fas fa-arrow-left me-1"></i>Back to Login
+            </a>
+            <span class="mx-2 text-muted">|</span>
+            <a href="{{ url_for('auth.signup') }}" class="text-muted">
+                Create New Account
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 20px;
+}
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 500px;
+}
+.auth-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.auth-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+}
+.email-highlight {
+    font-weight: 600;
+    color: #6366f1;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+.auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+</style>
+{% endblock %}

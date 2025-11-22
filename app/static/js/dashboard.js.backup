@@ -1,0 +1,289 @@
+let appUsageChart, sentimentChart, trendsChart, contentChart;
+
+async function loadDashboard() {
+    try {
+        await loadStats();
+        await loadAppUsage();
+        await loadContentAnalysis();
+        await loadWellnessTrends();
+        await loadKnowledgeGraph();
+    } catch (error) {
+        console.error('Dashboard loading error:', error);
+    }
+}
+
+async function loadStats() {
+    try {
+        const res = await fetch('/dashboard/api/stats');
+        const data = await res.json();
+
+        document.getElementById('totalSessions').textContent = data.total_sessions || 0;
+        document.getElementById('avgWellness').textContent = (data.avg_wellness || 0).toFixed(1);
+        document.getElementById('avgProductivity').textContent = (data.avg_productivity || 0).toFixed(1);
+
+        const hours = Math.floor((data.total_duration || 0) / 3600);
+        const mins = Math.floor(((data.total_duration || 0) % 3600) / 60);
+        document.getElementById('totalTime').textContent = `${hours}h ${mins}m`;
+    } catch (error) {
+        console.error('Stats loading error:', error);
+    }
+}
+
+async function loadAppUsage() {
+    try {
+        const res = await fetch('/dashboard/api/app-usage');
+        const data = await res.json();
+
+        if (!data.apps || data.apps.length === 0) {
+            document.getElementById('appUsageChart').parentElement.innerHTML = '<p class="text-center text-muted">No app usage data yet</p>';
+            return;
+        }
+
+        const ctx = document.getElementById('appUsageChart');
+        if (appUsageChart) appUsageChart.destroy();
+
+        appUsageChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.apps.map(a => a.name),
+                datasets: [{
+                    data: data.apps.map(a => a.percentage),
+                    backgroundColor: [
+                        '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
+                        '#10b981', '#3b82f6', '#ef4444', '#06b6d4'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.label}: ${ctx.parsed}%`
+                        }
+                    }
+                },
+                onClick: (e, items) => {
+                    if (items.length > 0) {
+                        const app = data.apps[items[0].index].name;
+                        loadAppDetails(app);
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('App usage loading error:', error);
+    }
+}
+
+async function loadContentAnalysis() {
+    try {
+        const res = await fetch('/dashboard/api/content-analysis');
+        const data = await res.json();
+
+        const ctx1 = document.getElementById('sentimentChart');
+        if (sentimentChart) sentimentChart.destroy();
+
+        if (!data.sentiment_distribution || Object.keys(data.sentiment_distribution).length === 0) {
+            ctx1.parentElement.innerHTML = '<p class="text-center text-muted">No sentiment data yet</p>';
+        } else {
+            sentimentChart = new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.sentiment_distribution),
+                    datasets: [{
+                        data: Object.values(data.sentiment_distribution),
+                        backgroundColor: ['#10b981', '#ef4444', '#6b7280', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        const ctx2 = document.getElementById('contentChart');
+        if (contentChart) contentChart.destroy();
+
+        if (!data.content_types || Object.keys(data.content_types).length === 0) {
+            ctx2.parentElement.innerHTML = '<p class="text-center text-muted">No content data yet</p>';
+        } else {
+            contentChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.content_types).map(k => k.replace('_', ' ')),
+                    datasets: [{
+                        label: 'Count',
+                        data: Object.values(data.content_types),
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Content analysis loading error:', error);
+    }
+}
+
+async function loadWellnessTrends() {
+    try {
+        const res = await fetch('/dashboard/api/wellness-trends');
+        const data = await res.json();
+
+        const ctx = document.getElementById('trendsChart');
+        if (trendsChart) trendsChart.destroy();
+
+        if (!data || data.length === 0) {
+            ctx.parentElement.innerHTML = '<p class="text-center text-muted">No wellness trends data yet. Start analyzing your screen activity!</p>';
+            return;
+        }
+
+        trendsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Wellness Score',
+                        data: data.map(d => d.wellness_score),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Productivity Score',
+                        data: data.map(d => d.productivity_score),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Wellness trends loading error:', error);
+    }
+}
+
+async function loadKnowledgeGraph() {
+    try {
+        const res = await fetch('/dashboard/api/knowledge-graph');
+        const data = await res.json();
+
+        if (!data || !data.nodes || data.nodes.length === 0) {
+            document.getElementById('knowledgeGraph').innerHTML = '<p class="text-center text-muted">No knowledge graph data available</p>';
+            return;
+        }
+
+        const nodes = data.nodes.map(n => ({
+            id: n.id,
+            label: n.label,
+            color: getNodeColor(n.type),
+            size: 20
+        }));
+
+        const edges = data.edges.map(e => ({
+            from: e.source,
+            to: e.target,
+            label: e.relationship,
+            arrows: 'to'
+        }));
+
+        const container = document.getElementById('knowledgeGraph');
+
+        if (typeof vis === 'undefined') {
+            container.innerHTML = '<p class="text-center text-muted">Visualizing ' + nodes.length + ' nodes and ' + edges.length + ' connections</p>';
+            return;
+        }
+
+        const graphData = {
+            nodes: new vis.DataSet(nodes),
+            edges: new vis.DataSet(edges)
+        };
+
+        const options = {
+            nodes: {
+                shape: 'dot',
+                font: { size: 12 }
+            },
+            edges: {
+                font: { size: 10, align: 'middle' },
+                smooth: { type: 'continuous' }
+            },
+            physics: {
+                stabilization: { iterations: 100 }
+            }
+        };
+
+        new vis.Network(container, graphData, options);
+    } catch (error) {
+        console.error('Knowledge graph error:', error);
+        document.getElementById('knowledgeGraph').innerHTML = '<p class="text-center text-muted">Error loading knowledge graph</p>';
+    }
+}
+
+function getNodeColor(type) {
+    const colors = {
+        person: '#6366f1',
+        demographic: '#8b5cf6',
+        personality: '#ec4899',
+        trait: '#f59e0b',
+        occupation: '#10b981',
+        location: '#3b82f6',
+        wellness: '#ef4444',
+        metric: '#06b6d4',
+        app: '#14b8a6',
+        content: '#a855f7',
+        goal: '#f97316'
+    };
+    return colors[type] || '#6b7280';
+}
+
+async function loadAppDetails(appName) {
+    const res = await fetch(`/dashboard/api/app-details/${appName}`);
+    const data = await res.json();
+
+    const html = `
+        <h5>${appName} - Detailed Analysis</h5>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <h6>Content Types</h6>
+                <ul>
+                    ${Object.entries(data.content_types).map(([k,v]) =>
+                        `<li>${k.replace('_', ' ')}: ${v}</li>`
+                    ).join('')}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Sentiments</h6>
+                <ul>
+                    ${Object.entries(data.sentiments).map(([k,v]) =>
+                        `<li>${k}: ${v}</li>`
+                    ).join('')}
+                </ul>
+            </div>
+        </div>
+        <p><strong>Average Sentiment Score:</strong> ${data.avg_sentiment_score.toFixed(2)}</p>
+    `;
+
+    document.getElementById('appDetailsContainer').innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', loadDashboard);

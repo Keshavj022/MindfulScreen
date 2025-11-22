@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="MindfulScreen" height="60" class="mb-3">
+            <h2>Verify Your Email</h2>
+            <p class="text-muted">We've sent a verification code to</p>
+            <p class="email-highlight">{{ email }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.verify_email') }}" id="otpForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-4">
+                <label class="form-label">Enter 6-digit verification code</label>
+                <div class="otp-inputs">
+                    <input type="text" class="otp-input" maxlength="1" data-index="0" autofocus>
+                    <input type="text" class="otp-input" maxlength="1" data-index="1">
+                    <input type="text" class="otp-input" maxlength="1" data-index="2">
+                    <input type="text" class="otp-input" maxlength="1" data-index="3">
+                    <input type="text" class="otp-input" maxlength="1" data-index="4">
+                    <input type="text" class="otp-input" maxlength="1" data-index="5">
+                </div>
+                <input type="hidden" name="otp" id="otpHidden">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="verifyBtn">
+                <i class="fas fa-check-circle me-2"></i>Verify Email
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <p class="text-muted mb-2">Didn't receive the code?</p>
+            <button class="btn btn-link" id="resendBtn" onclick="resendOTP()">
+                <i class="fas fa-redo me-1"></i>Resend Code
+            </button>
+            <p class="small text-muted mt-2" id="timerText"></p>
+        </div>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('auth.signup') }}" class="text-muted">
+                <i class="fas fa-arrow-left me-1"></i>Back to Registration
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 20px;
+}
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 450px;
+}
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.email-highlight {
+    font-weight: 600;
+    color: #6366f1;
+    word-break: break-all;
+}
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+.otp-input {
+    width: 50px;
+    height: 60px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+.otp-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+.otp-input.filled {
+    background: #f0f0ff;
+    border-color: #6366f1;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+}
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.otp-input');
+    const otpHidden = document.getElementById('otpHidden');
+    const form = document.getElementById('otpForm');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+            const value = e.target.value;
+
+            // Only allow numbers
+            if (!/^\d*$/.test(value)) {
+                e.target.value = '';
+                return;
+            }
+
+            if (value.length === 1) {
+                input.classList.add('filled');
+                // Move to next input
+                if (index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            }
+
+            updateHiddenOTP();
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+                inputs[index - 1].focus();
+                inputs[index - 1].classList.remove('filled');
+            }
+        });
+
+        // Handle paste
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+
+            pastedData.split('').forEach((char, i) => {
+                if (inputs[i]) {
+                    inputs[i].value = char;
+                    inputs[i].classList.add('filled');
+                }
+            });
+
+            updateHiddenOTP();
+            if (pastedData.length === 6) {
+                inputs[5].focus();
+            }
+        });
+    });
+
+    function updateHiddenOTP() {
+        const otp = Array.from(inputs).map(i => i.value).join('');
+        otpHidden.value = otp;
+    }
+
+    form.addEventListener('submit', function(e) {
+        updateHiddenOTP();
+        if (otpHidden.value.length !== 6) {
+            e.preventDefault();
+            alert('Please enter the complete 6-digit code');
+        }
+    });
+
+    // Start countdown for resend
+    startResendTimer();
+});
+
+let resendTimer = 60;
+
+function startResendTimer() {
+    const resendBtn = document.getElementById('resendBtn');
+    const timerText = document.getElementById('timerText');
+
+    resendBtn.disabled = true;
+    resendTimer = 60;
+
+    const interval = setInterval(() => {
+        resendTimer--;
+        timerText.textContent = `Resend available in ${resendTimer}s`;
+
+        if (resendTimer <= 0) {
+            clearInterval(interval);
+            resendBtn.disabled = false;
+            timerText.textContent = '';
+        }
+    }, 1000);
+}
+
+function resendOTP() {
+    const resendBtn = document.getElementById('resendBtn');
+    resendBtn.disabled = true;
+    resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+
+    fetch('/resend-otp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('New verification code sent!');
+            startResendTimer();
+        } else {
+            alert('Failed to resend code. Please try again.');
+            resendBtn.disabled = false;
+        }
+        resendBtn.innerHTML = '<i class="fas fa-redo me-1"></i>Resend Code';
+    })
+    .catch(() => {
+        alert('Failed to resend code. Please try again.');
+        resendBtn.disabled = false;
+        resendBtn.innerHTML = '<i class="fas fa-redo me-1"></i>Resend Code';
+    });
+}
+</script>
+{% endblock %}

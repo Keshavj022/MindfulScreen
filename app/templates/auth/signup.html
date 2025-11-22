@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-wide">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="MindfulScreen" height="60" class="mb-3">
+            <h2>Create Your Account</h2>
+            <p class="text-muted">Start your digital wellness journey today</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Personal Information -->
+            <h6 class="section-title"><i class="fas fa-user me-2"></i>Personal Information</h6>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required minlength="2"
+                           placeholder="Enter your full name">
+                    <div class="invalid-feedback">Please enter a valid name</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" required
+                               placeholder="your@email.com">
+                    </div>
+                    <small class="text-muted" id="emailFeedback"></small>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" required minlength="8">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                            <i class="fas fa-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength mt-2" id="passwordStrength" style="display: none;">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" id="strengthBar" style="width: 0%"></div>
+                        </div>
+                        <small id="strengthText" class="text-muted"></small>
+                    </div>
+                    <small class="text-muted">Min 8 chars, uppercase, lowercase, number, special char</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
+                            <i class="fas fa-eye" id="confirm_password-icon"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback">Passwords do not match</div>
+                </div>
+            </div>
+
+            <!-- Phone with Country Code -->
+            <h6 class="section-title mt-4"><i class="fas fa-phone me-2"></i>Contact Information</h6>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="country_code" class="form-label">Country Code</label>
+                    <select class="form-select" id="country_code" name="country_code">
+                        <option value="">Select</option>
+                        <option value="+1">+1 (US/Canada)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+91">+91 (India)</option>
+                        <option value="+61">+61 (Australia)</option>
+                        <option value="+49">+49 (Germany)</option>
+                        <option value="+33">+33 (France)</option>
+                        <option value="+81">+81 (Japan)</option>
+                        <option value="+86">+86 (China)</option>
+                        <option value="+55">+55 (Brazil)</option>
+                        <option value="+52">+52 (Mexico)</option>
+                        <option value="+971">+971 (UAE)</option>
+                        <option value="+65">+65 (Singapore)</option>
+                        <option value="+82">+82 (South Korea)</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone" name="phone"
+                           placeholder="Phone number (optional)" pattern="[0-9]{6,15}">
+                </div>
+            </div>
+
+            <!-- Location -->
+            <h6 class="section-title mt-4"><i class="fas fa-map-marker-alt me-2"></i>Location</h6>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="country" class="form-label">Country</label>
+                    <select class="form-select" id="country" name="country">
+                        <option value="">Select Country</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="India">India</option>
+                        <option value="Japan">Japan</option>
+                        <option value="China">China</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="UAE">United Arab Emirates</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="South Korea">South Korea</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" placeholder="Enter your city">
+                </div>
+            </div>
+
+            <!-- Demographics -->
+            <h6 class="section-title mt-4"><i class="fas fa-info-circle me-2"></i>Additional Information</h6>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="age" class="form-label">Age</label>
+                    <input type="number" class="form-control" id="age" name="age" min="18" max="120">
+                    <small class="text-muted">Must be 18+</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="gender" class="form-label">Gender</label>
+                    <select class="form-select" id="gender" name="gender">
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="occupation" class="form-label">Occupation</label>
+                    <input type="text" class="form-control" id="occupation" name="occupation">
+                </div>
+            </div>
+
+            <!-- Consent -->
+            <h6 class="section-title mt-4"><i class="fas fa-check-square me-2"></i>Terms & Privacy</h6>
+
+            <div class="consent-section">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="terms_accepted" name="terms_accepted" required>
+                    <label class="form-check-label" for="terms_accepted">
+                        I agree to the <a href="{{ url_for('privacy.terms') }}" target="_blank">Terms and Conditions</a> <span class="text-danger">*</span>
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="privacy_accepted" name="privacy_accepted" required>
+                    <label class="form-check-label" for="privacy_accepted">
+                        I agree to the <a href="{{ url_for('privacy.policy') }}" target="_blank">Privacy Policy</a> <span class="text-danger">*</span>
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="marketing_consent" name="marketing_consent">
+                    <label class="form-check-label" for="marketing_consent">
+                        I'd like to receive wellness tips via email (optional)
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+                <i class="fas fa-user-plus me-2"></i>Create Account
+            </button>
+
+            <div class="text-center mt-3">
+                <small class="text-muted"><i class="fas fa-shield-alt me-1"></i>Your data is encrypted and secure</small>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 20px;
+}
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 500px;
+}
+.auth-card-wide { max-width: 700px; }
+.auth-header { text-align: center; margin-bottom: 30px; }
+.section-title {
+    color: #6366f1;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+.consent-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.password-strength .progress-bar.weak { background: #ef4444; }
+.password-strength .progress-bar.medium { background: #f59e0b; }
+.password-strength .progress-bar.strong { background: #10b981; }
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+}
+.text-valid { color: #10b981 !important; }
+.text-invalid { color: #ef4444 !important; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    let emailTimeout;
+    email.addEventListener('input', function() {
+        clearTimeout(emailTimeout);
+        emailTimeout = setTimeout(validateEmail, 500);
+    });
+
+    password.addEventListener('input', function() {
+        updatePasswordStrength(this.value);
+        validatePasswordMatch();
+    });
+
+    confirmPassword.addEventListener('input', validatePasswordMatch);
+});
+
+function validateEmail() {
+    const email = document.getElementById('email');
+    const feedback = document.getElementById('emailFeedback');
+    const value = email.value.trim();
+
+    if (!value) { feedback.textContent = ''; return; }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+        feedback.textContent = 'Please enter a valid email';
+        feedback.className = 'text-invalid small';
+        return;
+    }
+
+    fetch('/api/validate-email', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email: value})
+    })
+    .then(r => r.json())
+    .then(data => {
+        feedback.textContent = data.valid ? 'Email available' : data.error;
+        feedback.className = data.valid ? 'text-valid small' : 'text-invalid small';
+    });
+}
+
+function updatePasswordStrength(password) {
+    const strengthDiv = document.getElementById('passwordStrength');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+
+    if (!password) { strengthDiv.style.display = 'none'; return; }
+    strengthDiv.style.display = 'block';
+
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[@$!%*?&#]/.test(password)) score++;
+
+    let strength, className, width;
+    if (score <= 2) { strength = 'Weak'; className = 'weak'; width = '33%'; }
+    else if (score <= 4) { strength = 'Medium'; className = 'medium'; width = '66%'; }
+    else { strength = 'Strong'; className = 'strong'; width = '100%'; }
+
+    strengthBar.style.width = width;
+    strengthBar.className = 'progress-bar ' + className;
+    strengthText.textContent = strength;
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password');
+    if (confirm.value && password !== confirm.value) {
+        confirm.classList.add('is-invalid');
+    } else if (confirm.value) {
+        confirm.classList.remove('is-invalid');
+        confirm.classList.add('is-valid');
+    }
+}
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-icon');
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
+{% endblock %}

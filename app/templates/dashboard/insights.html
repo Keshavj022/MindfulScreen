@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="insights-wrapper">
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="insights-header mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2><i class="fas fa-lightbulb text-warning me-2"></i>AI-Powered Insights</h2>
+                    <p class="text-muted mb-0">Your personalized digital wellness guide</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <button class="btn btn-primary ms-2" onclick="refreshInsights()">
+                        <i class="fas fa-sync-alt"></i> Refresh Insights
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+            <h5>Analyzing your data...</h5>
+            <p class="text-muted">Our AI is generating personalized insights just for you</p>
+        </div>
+
+        <!-- Insights Content -->
+        <div id="insightsContent" style="display: none;">
+            <!-- Overall Assessment Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-lg assessment-card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center">
+                                    <div class="grade-circle" id="wellnessGrade">-</div>
+                                    <small class="text-muted">Wellness Grade</small>
+                                </div>
+                                <div class="col-md-7">
+                                    <h4 id="assessmentSummary">Loading...</h4>
+                                    <div class="d-flex gap-4 mt-3">
+                                        <div>
+                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                            <strong>Strength:</strong>
+                                            <span id="keyStrength">-</span>
+                                        </div>
+                                        <div>
+                                            <i class="fas fa-exclamation-circle text-warning me-1"></i>
+                                            <strong>Focus Area:</strong>
+                                            <span id="primaryConcern">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="motivational-quote" id="motivationalMessage">
+                                        <i class="fas fa-quote-left text-primary opacity-50"></i>
+                                        <p class="fst-italic mb-0">Loading...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Row -->
+            <div class="row mb-4" id="quickStats">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Digital Wellness Tips -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-desktop me-2"></i>Digital Wellness Tips</h5>
+                        </div>
+                        <div class="card-body" id="digitalWellnessTips">
+                            <p class="text-muted">Loading tips...</p>
+                        </div>
+                    </div>
+
+                    <!-- App-Specific Advice -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>App-Specific Advice</h5>
+                        </div>
+                        <div class="card-body" id="appSpecificAdvice">
+                            <p class="text-muted">Loading advice...</p>
+                        </div>
+                    </div>
+
+                    <!-- Daily Routine Suggestions -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Daily Routine Suggestions</h5>
+                        </div>
+                        <div class="card-body" id="dailyRoutine">
+                            <p class="text-muted">Loading suggestions...</p>
+                        </div>
+                    </div>
+
+                    <!-- Productivity Suggestions -->
+                    <div class="card shadow">
+                        <div class="card-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                            <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>Productivity Boost</h5>
+                        </div>
+                        <div class="card-body" id="productivitySuggestions">
+                            <p class="text-muted">Loading suggestions...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Physical Health Tips -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Physical Health</h5>
+                        </div>
+                        <div class="card-body" id="physicalHealthTips">
+                            <p class="text-muted">Loading tips...</p>
+                        </div>
+                    </div>
+
+                    <!-- Mental Health Tips -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white;">
+                            <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mental Wellness</h5>
+                        </div>
+                        <div class="card-body" id="mentalHealthTips">
+                            <p class="text-muted">Loading tips...</p>
+                        </div>
+                    </div>
+
+                    <!-- Focus & Avoid Areas -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Focus Areas</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-success"><i class="fas fa-arrow-up me-1"></i>Focus On:</h6>
+                            <ul id="focusAreas" class="list-unstyled mb-3">
+                                <li class="text-muted">Loading...</li>
+                            </ul>
+                            <h6 class="text-danger"><i class="fas fa-arrow-down me-1"></i>Reduce/Avoid:</h6>
+                            <ul id="avoidAreas" class="list-unstyled mb-0">
+                                <li class="text-muted">Loading...</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Challenges -->
+                    <div class="card shadow">
+                        <div class="card-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Weekly Challenges</h5>
+                        </div>
+                        <div class="card-body" id="weeklyChallenges">
+                            <p class="text-muted">Loading challenges...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.insights-wrapper {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+.assessment-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.grade-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.motivational-quote {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.tip-card {
+    border-left: 4px solid;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f8f9fa;
+    border-radius: 0 8px 8px 0;
+}
+
+.tip-card.high {
+    border-color: #ef4444;
+}
+
+.tip-card.medium {
+    border-color: #f59e0b;
+}
+
+.tip-card.low {
+    border-color: #10b981;
+}
+
+.health-tip {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.health-tip-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.app-advice-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.routine-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.routine-item:last-child {
+    border-bottom: none;
+}
+
+.routine-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.challenge-item {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.challenge-difficulty {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.challenge-difficulty.easy {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.challenge-difficulty.medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.challenge-difficulty.hard {
+    background: #fee2e2;
+    color: #dc2626;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', loadInsights);
+
+async function loadInsights() {
+    try {
+        const response = await fetch('/dashboard/api/ai-insights');
+        const data = await response.json();
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('insightsContent').style.display = 'block';
+
+        if (data.is_new_user) {
+            renderNewUserInsights(data);
+        } else {
+            renderFullInsights(data);
+        }
+    } catch (error) {
+        console.error('Error loading insights:', error);
+        document.getElementById('loadingState').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Error loading insights. Please try again later.
+            </div>
+        `;
+    }
+}
+
+function refreshInsights() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('insightsContent').style.display = 'none';
+    loadInsights();
+}
+
+function renderFullInsights(data) {
+    // Overall Assessment
+    if (data.overall_assessment) {
+        document.getElementById('wellnessGrade').textContent = data.overall_assessment.wellness_grade || '-';
+        document.getElementById('assessmentSummary').textContent = data.overall_assessment.summary || '';
+        document.getElementById('keyStrength').textContent = data.overall_assessment.key_strength || '-';
+        document.getElementById('primaryConcern').textContent = data.overall_assessment.primary_concern || '-';
+    }
+
+    // Motivational Message
+    if (data.motivational_message) {
+        document.getElementById('motivationalMessage').innerHTML = `
+            <i class="fas fa-quote-left text-white opacity-50"></i>
+            <p class="fst-italic mb-0">${data.motivational_message}</p>
+        `;
+    }
+
+    // Quick Stats
+    if (data.user_data) {
+        document.getElementById('quickStats').innerHTML = `
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">${data.user_data.avg_wellness}/10</h3>
+                        <small class="text-muted">Wellness Score</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">${data.user_data.productive_percentage}%</h3>
+                        <small class="text-muted">Productive Time</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-danger">${data.user_data.high_risk_percentage}%</h3>
+                        <small class="text-muted">High-Risk Time</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">${data.user_data.total_duration_hours}h</h3>
+                        <small class="text-muted">Total Analyzed</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Digital Wellness Tips
+    if (data.digital_wellness_tips && data.digital_wellness_tips.length > 0) {
+        document.getElementById('digitalWellnessTips').innerHTML = data.digital_wellness_tips.map(tip => `
+            <div class="tip-card ${tip.priority}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="mb-2">${tip.title}</h6>
+                    <span class="badge bg-${tip.priority === 'high' ? 'danger' : tip.priority === 'medium' ? 'warning' : 'success'}">${tip.priority}</span>
+                </div>
+                <p class="mb-0 text-muted">${tip.description}</p>
+            </div>
+        `).join('');
+    }
+
+    // Physical Health Tips
+    if (data.physical_health_tips && data.physical_health_tips.length > 0) {
+        document.getElementById('physicalHealthTips').innerHTML = data.physical_health_tips.map(tip => `
+            <div class="health-tip">
+                <div class="health-tip-icon bg-success text-white">
+                    <i class="fas ${tip.icon || 'fa-heart'}"></i>
+                </div>
+                <div>
+                    <strong>${tip.title}</strong>
+                    <p class="mb-0 small text-muted">${tip.description}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Mental Health Tips
+    if (data.mental_health_tips && data.mental_health_tips.length > 0) {
+        document.getElementById('mentalHealthTips').innerHTML = data.mental_health_tips.map(tip => `
+            <div class="health-tip">
+                <div class="health-tip-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white;">
+                    <i class="fas ${tip.icon || 'fa-brain'}"></i>
+                </div>
+                <div>
+                    <strong>${tip.title}</strong>
+                    <p class="mb-0 small text-muted">${tip.description}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // App-Specific Advice
+    if (data.app_specific_advice && data.app_specific_advice.length > 0) {
+        document.getElementById('appSpecificAdvice').innerHTML = data.app_specific_advice.map(advice => `
+            <div class="app-advice-item">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0"><i class="fas fa-mobile-alt me-2 text-info"></i>${advice.app_name}</h6>
+                    <small class="text-muted">${advice.current_usage || ''}</small>
+                </div>
+                <p class="mb-2">${advice.recommendation}</p>
+                ${advice.alternative ? `<small class="text-success"><i class="fas fa-lightbulb me-1"></i>Try instead: ${advice.alternative}</small>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // Daily Routine
+    if (data.daily_routine_suggestions) {
+        const routine = data.daily_routine_suggestions;
+        document.getElementById('dailyRoutine').innerHTML = `
+            <div class="routine-item">
+                <div class="routine-icon bg-warning text-white">
+                    <i class="fas fa-sun"></i>
+                </div>
+                <div>
+                    <strong>Morning</strong>
+                    <p class="mb-0 text-muted">${routine.morning || 'Start your day mindfully'}</p>
+                </div>
+            </div>
+            <div class="routine-item">
+                <div class="routine-icon bg-primary text-white">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>
+                    <strong>Work Hours</strong>
+                    <p class="mb-0 text-muted">${routine.work_hours || 'Stay focused and productive'}</p>
+                </div>
+            </div>
+            <div class="routine-item">
+                <div class="routine-icon bg-info text-white">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <div>
+                    <strong>Evening</strong>
+                    <p class="mb-0 text-muted">${routine.evening || 'Wind down gradually'}</p>
+                </div>
+            </div>
+            <div class="routine-item">
+                <div class="routine-icon bg-dark text-white">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div>
+                    <strong>Before Bed</strong>
+                    <p class="mb-0 text-muted">${routine.before_bed || 'Avoid screens 1 hour before sleep'}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Productivity Suggestions
+    if (data.productivity_suggestions && data.productivity_suggestions.length > 0) {
+        document.getElementById('productivitySuggestions').innerHTML = data.productivity_suggestions.map(suggestion => `
+            <div class="tip-card medium">
+                <h6 class="mb-2">${suggestion.title}</h6>
+                <p class="mb-2 text-muted">${suggestion.description}</p>
+                ${suggestion.expected_impact ? `<small class="text-success"><i class="fas fa-chart-line me-1"></i>${suggestion.expected_impact}</small>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // Focus & Avoid Areas
+    if (data.focus_areas && data.focus_areas.length > 0) {
+        document.getElementById('focusAreas').innerHTML = data.focus_areas.map(area => `
+            <li><i class="fas fa-check text-success me-2"></i>${area}</li>
+        `).join('');
+    }
+
+    if (data.avoid_areas && data.avoid_areas.length > 0) {
+        document.getElementById('avoidAreas').innerHTML = data.avoid_areas.map(area => `
+            <li><i class="fas fa-times text-danger me-2"></i>${area}</li>
+        `).join('');
+    }
+
+    // Weekly Challenges
+    if (data.weekly_challenges && data.weekly_challenges.length > 0) {
+        document.getElementById('weeklyChallenges').innerHTML = data.weekly_challenges.map(challenge => `
+            <div class="challenge-item">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <strong>${challenge.challenge}</strong>
+                    <span class="challenge-difficulty ${challenge.difficulty}">${challenge.difficulty}</span>
+                </div>
+                <p class="mb-0 small">${challenge.goal}</p>
+            </div>
+        `).join('');
+    }
+}
+
+function renderNewUserInsights(data) {
+    document.getElementById('wellnessGrade').textContent = 'N/A';
+    document.getElementById('assessmentSummary').textContent = data.overall_assessment?.summary || 'Welcome! Start your first analysis to get personalized insights.';
+    document.getElementById('keyStrength').textContent = data.overall_assessment?.key_strength || 'Taking the first step';
+    document.getElementById('primaryConcern').textContent = data.overall_assessment?.primary_concern || 'No data yet';
+    document.getElementById('motivationalMessage').innerHTML = `
+        <i class="fas fa-quote-left text-white opacity-50"></i>
+        <p class="fst-italic mb-0">${data.motivational_message || 'Every journey begins with a single step!'}</p>
+    `;
+
+    // Show new user tips
+    if (data.digital_wellness_tips) {
+        document.getElementById('digitalWellnessTips').innerHTML = data.digital_wellness_tips.map(tip => `
+            <div class="tip-card ${tip.priority}">
+                <h6 class="mb-2">${tip.title}</h6>
+                <p class="mb-0 text-muted">${tip.description}</p>
+            </div>
+        `).join('');
+    }
+
+    if (data.physical_health_tips) {
+        document.getElementById('physicalHealthTips').innerHTML = data.physical_health_tips.map(tip => `
+            <div class="health-tip">
+                <div class="health-tip-icon bg-success text-white">
+                    <i class="fas ${tip.icon || 'fa-heart'}"></i>
+                </div>
+                <div>
+                    <strong>${tip.title}</strong>
+                    <p class="mb-0 small text-muted">${tip.description}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if (data.mental_health_tips) {
+        document.getElementById('mentalHealthTips').innerHTML = data.mental_health_tips.map(tip => `
+            <div class="health-tip">
+                <div class="health-tip-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white;">
+                    <i class="fas ${tip.icon || 'fa-brain'}"></i>
+                </div>
+                <div>
+                    <strong>${tip.title}</strong>
+                    <p class="mb-0 small text-muted">${tip.description}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+</script>
+{% endblock %}

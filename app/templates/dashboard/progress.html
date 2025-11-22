@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="progress-wrapper">
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-chart-line me-2"></i>Your Wellness Progress</h2>
+                <p class="text-muted">Track your improvement over time and see how your wellness metrics evolve</p>
+            </div>
+        </div>
+
+        <!-- Current Status Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow h-100 border-left-primary">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Mental Wellness</h6>
+                        <h2 class="text-primary" id="currentMentalWellness">--</h2>
+                        <small class="text-muted">/100</small>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-primary" id="mentalProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow h-100 border-left-success">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Digital Wellness</h6>
+                        <h2 class="text-success" id="currentDigitalWellness">--</h2>
+                        <small class="text-muted">/100</small>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" id="digitalProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow h-100 border-left-info">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Stress Level</h6>
+                        <h2 id="currentStress">--</h2>
+                        <span class="badge" id="stressBadge">Unknown</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow h-100 border-left-warning">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Personality Type</h6>
+                        <h5 id="personalityType" class="text-warning mb-2">--</h5>
+                        <small class="text-muted">ML-Classified</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Chart -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Wellness Trends</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary active" onclick="setTimeRange('week')">Week</button>
+                            <button class="btn btn-outline-primary" onclick="setTimeRange('month')">Month</button>
+                            <button class="btn btn-outline-primary" onclick="setTimeRange('all')">All Time</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="progressChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Achievements</h5>
+                    </div>
+                    <div class="card-body" id="achievementsContainer">
+                        <!-- Dynamically loaded -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mental Health Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="mentalHealthMetrics">
+                            {% if current_user.mental_health_scores %}
+                            {% for category, score in current_user.mental_health_scores.items() %}
+                            <div class="metric-row mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>{{ category|replace('_', ' ')|title }}</span>
+                                    <span class="badge {% if score <= 2 %}bg-success{% elif score <= 3.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ score }}/5
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar {% if score <= 2 %}bg-success{% elif score <= 3.5 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ (score / 5 * 100)|round }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted text-center">Complete the assessment to see your mental health metrics</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Digital Wellness Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="digitalWellnessMetrics">
+                            {% if current_user.digital_wellness_scores %}
+                            {% for category, score in current_user.digital_wellness_scores.items() %}
+                            <div class="metric-row mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>{{ category|replace('_', ' ')|title }}</span>
+                                    <span class="badge {% if score <= 2 %}bg-success{% elif score <= 3.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ score }}/5
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar {% if score <= 2 %}bg-success{% elif score <= 3.5 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ (score / 5 * 100)|round }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted text-center">Complete the assessment to see your digital wellness metrics</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Based on Progress -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Personalized Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="recommendationsContainer">
+                            {% if current_user.mental_health_recommendations %}
+                            {% for rec in current_user.mental_health_recommendations[:4] %}
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <div class="recommendation-card p-3 h-100 border-start border-4 {% if rec.priority == 'high' %}border-danger{% elif rec.priority == 'medium' %}border-warning{% else %}border-success{% endif %}">
+                                    <h6 class="mb-2">{{ rec.area }}</h6>
+                                    <p class="small text-muted mb-2">{{ rec.tip }}</p>
+                                    <div class="action-item small">
+                                        <i class="fas fa-play-circle text-primary me-1"></i>
+                                        {{ rec.action }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="col-12 text-center text-muted py-4">
+                                <i class="fas fa-clipboard-list fa-3x mb-3 opacity-50"></i>
+                                <p>Complete the personality assessment to get personalized recommendations</p>
+                                <a href="{{ url_for('quiz.start') }}" class="btn btn-primary">Take Assessment</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retake Assessment -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow bg-light">
+                    <div class="card-body text-center py-4">
+                        <h5>Want to update your wellness profile?</h5>
+                        <p class="text-muted mb-3">Retake the assessment to track your progress and get updated recommendations</p>
+                        <button class="btn btn-outline-primary" onclick="retakeAssessment()">
+                            <i class="fas fa-redo me-2"></i>Retake Assessment
+                        </button>
+                        <span class="text-muted ms-3" id="lastAssessment">
+                            {% if current_user.last_assessment_date %}
+                            Last taken: {{ current_user.last_assessment_date.strftime('%B %d, %Y') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-wrapper {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    min-height: 100vh;
+}
+
+.border-left-primary { border-left: 4px solid #6366f1 !important; }
+.border-left-success { border-left: 4px solid #10b981 !important; }
+.border-left-info { border-left: 4px solid #06b6d4 !important; }
+.border-left-warning { border-left: 4px solid #f59e0b !important; }
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+
+.recommendation-card {
+    background: white;
+    border-radius: 8px;
+}
+
+.action-item {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.achievement-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.achievement-icon.gold { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
+.achievement-icon.silver { background: linear-gradient(135deg, #9ca3af, #d1d5db); color: white; }
+.achievement-icon.bronze { background: linear-gradient(135deg, #92400e, #d97706); color: white; }
+</style>
+
+<script>
+let progressChart = null;
+let progressHistory = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadProgressData();
+});
+
+async function loadProgressData() {
+    try {
+        const response = await fetch('/quiz/api/progress');
+        const data = await response.json();
+
+        progressHistory = data.history || [];
+
+        // Update current values
+        if (data.current) {
+            document.getElementById('currentMentalWellness').textContent =
+                Math.round(data.current.mental_wellness_index || 0);
+            document.getElementById('mentalProgress').style.width =
+                (data.current.mental_wellness_index || 0) + '%';
+
+            document.getElementById('currentDigitalWellness').textContent =
+                Math.round(data.current.digital_wellness_index || 0);
+            document.getElementById('digitalProgress').style.width =
+                (data.current.digital_wellness_index || 0) + '%';
+
+            const stress = data.current.stress_level || 'unknown';
+            document.getElementById('currentStress').textContent =
+                stress.charAt(0).toUpperCase() + stress.slice(1);
+            const stressBadge = document.getElementById('stressBadge');
+            stressBadge.textContent = stress;
+            stressBadge.className = 'badge ' + (
+                stress === 'low' ? 'bg-success' :
+                stress === 'medium' ? 'bg-warning' : 'bg-danger'
+            );
+
+            document.getElementById('personalityType').textContent =
+                data.current.personality_type || 'Not assessed';
+        }
+
+        // Initialize chart
+        initProgressChart();
+
+        // Load achievements
+        loadAchievements();
+
+    } catch (error) {
+        console.error('Error loading progress:', error);
+    }
+}
+
+function initProgressChart() {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+
+    // Prepare data
+    const labels = progressHistory.map(h => {
+        const date = new Date(h.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    const mentalData = progressHistory.map(h => h.mental_wellness_index || 0);
+    const digitalData = progressHistory.map(h => h.digital_wellness_index || 0);
+
+    if (progressChart) {
+        progressChart.destroy();
+    }
+
+    progressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels.length ? labels : ['No data'],
+            datasets: [
+                {
+                    label: 'Mental Wellness',
+                    data: mentalData.length ? mentalData : [0],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Digital Wellness',
+                    data: digitalData.length ? digitalData : [0],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Wellness Index'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function setTimeRange(range) {
+    // Filter data based on range
+    const now = new Date();
+    let filteredHistory = progressHistory;
+
+    if (range === 'week') {
+        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        filteredHistory = progressHistory.filter(h => new Date(h.date) >= weekAgo);
+    } else if (range === 'month') {
+        const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        filteredHistory = progressHistory.filter(h => new Date(h.date) >= monthAgo);
+    }
+
+    // Update chart
+    const labels = filteredHistory.map(h => {
+        const date = new Date(h.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    progressChart.data.labels = labels.length ? labels : ['No data'];
+    progressChart.data.datasets[0].data = filteredHistory.map(h => h.mental_wellness_index || 0);
+    progressChart.data.datasets[1].data = filteredHistory.map(h => h.digital_wellness_index || 0);
+    progressChart.update();
+
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function loadAchievements() {
+    const container = document.getElementById('achievementsContainer');
+    const achievements = [];
+
+    // Check for achievements based on progress
+    if (progressHistory.length >= 1) {
+        achievements.push({
+            icon: 'fa-flag',
+            title: 'First Assessment',
+            description: 'Completed your first wellness assessment',
+            level: 'gold'
+        });
+    }
+
+    if (progressHistory.length >= 5) {
+        achievements.push({
+            icon: 'fa-calendar-check',
+            title: 'Consistent Tracker',
+            description: 'Completed 5 assessments',
+            level: 'silver'
+        });
+    }
+
+    // Check for improvement
+    if (progressHistory.length >= 2) {
+        const recent = progressHistory[progressHistory.length - 1];
+        const previous = progressHistory[progressHistory.length - 2];
+        if ((recent.mental_wellness_index || 0) > (previous.mental_wellness_index || 0)) {
+            achievements.push({
+                icon: 'fa-arrow-up',
+                title: 'Wellness Improver',
+                description: 'Mental wellness score improved',
+                level: 'bronze'
+            });
+        }
+    }
+
+    if (achievements.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-medal fa-2x mb-2 opacity-50"></i>
+                <p>Complete assessments to earn achievements!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = achievements.map(a => `
+        <div class="achievement-item">
+            <div class="achievement-icon ${a.level}">
+                <i class="fas ${a.icon}"></i>
+            </div>
+            <div>
+                <strong>${a.title}</strong>
+                <div class="small text-muted">${a.description}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function retakeAssessment() {
+    if (!confirm('Are you sure you want to retake the assessment? Your previous results will be preserved in your history.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/quiz/api/retake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = '/quiz/start';
+        } else {
+            alert('Error: ' + (data.error || 'Could not reset quiz'));
+        }
+    } catch (error) {
+        alert('Error resetting quiz. Please try again.');
+    }
+}
+</script>
+{% endblock %}

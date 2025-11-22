@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="quiz-wrapper">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Section Progress -->
+                <div class="section-progress mb-4" id="sectionProgress">
+                    <div class="d-flex justify-content-between">
+                        <span class="section-indicator active" data-section="big_five">
+                            <i class="fas fa-brain"></i> Personality
+                        </span>
+                        <span class="section-indicator" data-section="mental_health">
+                            <i class="fas fa-heart"></i> Mental Wellness
+                        </span>
+                        <span class="section-indicator" data-section="wellness">
+                            <i class="fas fa-mobile-alt"></i> Digital Habits
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Question Progress -->
+                <div class="quiz-progress mb-4">
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-gradient-primary" id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-muted">Question <span id="currentQ">1</span> of <span id="totalQ">65</span></span>
+                        <span class="text-muted" id="sectionTitle">Personality Assessment</span>
+                    </div>
+                </div>
+
+                <!-- Quiz Card -->
+                <div class="quiz-card card shadow" id="quizCard">
+                    <div class="card-body p-5">
+                        <div class="question-number mb-3">
+                            <span class="badge bg-primary" id="questionNumber">Q1</span>
+                            <span class="badge bg-light text-dark ms-2" id="traitBadge"></span>
+                        </div>
+                        <h3 id="questionText" class="mb-4"></h3>
+                        <div class="quiz-options">
+                            <button class="quiz-option" data-value="1">
+                                <span class="option-circle">1</span>
+                                <span class="option-text">Strongly Disagree</span>
+                            </button>
+                            <button class="quiz-option" data-value="2">
+                                <span class="option-circle">2</span>
+                                <span class="option-text">Disagree</span>
+                            </button>
+                            <button class="quiz-option" data-value="3">
+                                <span class="option-circle">3</span>
+                                <span class="option-text">Neutral</span>
+                            </button>
+                            <button class="quiz-option" data-value="4">
+                                <span class="option-circle">4</span>
+                                <span class="option-text">Agree</span>
+                            </button>
+                            <button class="quiz-option" data-value="5">
+                                <span class="option-circle">5</span>
+                                <span class="option-text">Strongly Agree</span>
+                            </button>
+                        </div>
+                        <div class="quiz-navigation mt-4">
+                            <button class="btn btn-outline-secondary" id="prevBtn" onclick="previousQuestion()" style="display: none;">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="quiz-loading text-center py-5" id="quizLoading" style="display: none;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                    <h4 class="mt-3">Analyzing your responses...</h4>
+                    <p class="text-muted">Our ML model is classifying your personality profile</p>
+                </div>
+
+                <!-- Results -->
+                <div class="quiz-results" id="quizResults" style="display: none;">
+                    <div class="results-header text-center mb-4">
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <h2>Assessment Complete!</h2>
+                        <p class="lead text-muted">Here's what we learned about you</p>
+                    </div>
+
+                    <!-- Personality Card -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Your Personality Profile</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <h3 id="personalityType" class="text-primary"></h3>
+                                <p id="personalityDesc" class="text-muted"></p>
+                                <div class="confidence-badge mt-2">
+                                    <span class="badge bg-success" id="confidenceBadge">Match Confidence: --</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-star text-warning me-2"></i>Your Strengths</h6>
+                                    <ul class="list-unstyled" id="strengthsList"></ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-seedling text-success me-2"></i>Growth Areas</h6>
+                                    <ul class="list-unstyled" id="growthList"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Big Five Chart -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-radar me-2"></i>Big Five Personality Traits</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="traitsChart" height="250"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Mental Health Card -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Mental Wellness Assessment</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <div class="wellness-score" id="mentalWellnessScore">
+                                        <svg viewBox="0 0 36 36" class="circular-chart">
+                                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" id="mentalWellnessCircle"/>
+                                            <text x="18" y="20.35" class="percentage" id="mentalWellnessText">--</text>
+                                        </svg>
+                                    </div>
+                                    <p class="mt-2" id="mentalHealthStatus">Status: --</p>
+                                </div>
+                                <div class="col-md-8">
+                                    <p id="mentalHealthDesc" class="text-muted mb-3"></p>
+                                    <h6>Recommendations:</h6>
+                                    <div id="mentalHealthRecs"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Wellness Card -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Digital Wellness</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <h2 id="digitalWellnessScore" class="text-primary">--</h2>
+                                    <p class="text-muted">Digital Wellness Index</p>
+                                    <span class="badge" id="digitalRiskBadge">Risk Level: --</span>
+                                </div>
+                                <div class="col-md-8">
+                                    <h6>Digital Wellness Tips:</h6>
+                                    <ul id="digitalWellnessTips" class="list-unstyled"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-lg me-2">
+                            <i class="fas fa-chart-line me-2"></i>View Dashboard
+                        </a>
+                        <a href="{{ url_for('dashboard.insights') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-lightbulb me-2"></i>Get AI Insights
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.quiz-wrapper {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+.section-indicator {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+}
+
+.section-indicator.active {
+    background: white;
+    color: #6366f1;
+    font-weight: 600;
+}
+
+.section-indicator.completed {
+    background: #10b981;
+    color: white;
+}
+
+.quiz-card {
+    border-radius: 20px;
+    border: none;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quiz-option:hover {
+    border-color: #6366f1;
+    transform: translateX(5px);
+}
+
+.quiz-option:active {
+    background: #6366f1;
+    color: white;
+}
+
+.option-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-weight: 600;
+}
+
+.quiz-option:hover .option-circle {
+    background: #6366f1;
+    color: white;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+
+.circular-chart {
+    width: 120px;
+    height: 120px;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 3.8;
+}
+
+.circle {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    stroke: #10b981;
+    transition: stroke-dasharray 1s ease;
+}
+
+.percentage {
+    fill: #374151;
+    font-size: 0.5em;
+    text-anchor: middle;
+    font-weight: 600;
+}
+
+.wellness-score {
+    display: inline-block;
+}
+
+#digitalRiskBadge.low { background: #10b981; color: white; }
+#digitalRiskBadge.moderate { background: #f59e0b; color: white; }
+#digitalRiskBadge.high { background: #ef4444; color: white; }
+
+.recommendation-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 4px solid #6366f1;
+}
+
+.recommendation-item.high { border-left-color: #ef4444; }
+.recommendation-item.medium { border-left-color: #f59e0b; }
+.recommendation-item.low { border-left-color: #10b981; }
+</style>
+
+<script>
+let questions = [];
+let sections = [];
+let currentQuestion = 0;
+let responses = {};
+let currentSection = 'big_five';
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/quiz/api/questions')
+        .then(r => r.json())
+        .then(data => {
+            questions = data.questions;
+            sections = data.sections;
+            document.getElementById('totalQ').textContent = data.total_questions;
+            showQuestion();
+        })
+        .catch(error => {
+            console.error('Error loading questions:', error);
+            alert('Error loading quiz questions. Please refresh the page.');
+        });
+});
+
+function showQuestion() {
+    if (currentQuestion >= questions.length) {
+        submitQuiz();
+        return;
+    }
+
+    const q = questions[currentQuestion];
+    document.getElementById('questionText').textContent = q.text;
+    document.getElementById('currentQ').textContent = currentQuestion + 1;
+    document.getElementById('questionNumber').textContent = `Q${currentQuestion + 1}`;
+
+    // Update trait badge
+    const traitBadge = document.getElementById('traitBadge');
+    if (q.trait) {
+        traitBadge.textContent = q.trait.charAt(0).toUpperCase() + q.trait.slice(1);
+        traitBadge.style.display = 'inline';
+    } else if (q.category) {
+        traitBadge.textContent = q.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        traitBadge.style.display = 'inline';
+    } else {
+        traitBadge.style.display = 'none';
+    }
+
+    // Update section indicator
+    const newSection = q.dimension;
+    if (newSection !== currentSection) {
+        document.querySelectorAll('.section-indicator').forEach(el => {
+            if (el.dataset.section === currentSection) {
+                el.classList.remove('active');
+                el.classList.add('completed');
+            }
+            if (el.dataset.section === newSection) {
+                el.classList.add('active');
+            }
+        });
+        currentSection = newSection;
+
+        // Update section title
+        const sectionData = sections.find(s => s.id === newSection);
+        if (sectionData) {
+            document.getElementById('sectionTitle').textContent = sectionData.title;
+        }
+    }
+
+    // Update progress
+    const progress = (currentQuestion / questions.length) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+
+    // Show/hide previous button
+    document.getElementById('prevBtn').style.display = currentQuestion > 0 ? 'inline-block' : 'none';
+
+    // Reset option selection
+    document.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.classList.remove('selected');
+        if (responses[q.id] && btn.dataset.value == responses[q.id]) {
+            btn.classList.add('selected');
+        }
+    });
+}
+
+function previousQuestion() {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        showQuestion();
+    }
+}
+
+document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const q = questions[currentQuestion];
+        responses[q.id] = this.dataset.value;
+        currentQuestion++;
+        showQuestion();
+    });
+});
+
+function submitQuiz() {
+    document.getElementById('quizCard').style.display = 'none';
+    document.getElementById('quizLoading').style.display = 'block';
+    document.getElementById('progressBar').style.width = '100%';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    fetch('/quiz/api/submit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({responses: responses})
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('quizLoading').style.display = 'none';
+
+        if (!data.success) {
+            alert('Error submitting quiz: ' + (data.error || 'Unknown error'));
+            return;
+        }
+
+        displayResults(data.results);
+    })
+    .catch(error => {
+        document.getElementById('quizLoading').style.display = 'none';
+        alert('Error submitting quiz. Please try again.');
+        console.error(error);
+    });
+}
+
+function displayResults(results) {
+    // Personality
+    document.getElementById('personalityType').textContent = results.personality_type;
+    document.getElementById('personalityDesc').textContent = results.personality_description || '';
+    document.getElementById('confidenceBadge').textContent =
+        `Match Confidence: ${Math.round((results.cluster_confidence || 0.8) * 100)}%`;
+
+    // Strengths and Growth Areas
+    const strengthsList = document.getElementById('strengthsList');
+    const growthList = document.getElementById('growthList');
+    strengthsList.innerHTML = (results.strengths || []).map(s =>
+        `<li><i class="fas fa-check text-success me-2"></i>${s}</li>`
+    ).join('');
+    growthList.innerHTML = (results.growth_areas || []).map(g =>
+        `<li><i class="fas fa-arrow-right text-primary me-2"></i>${g}</li>`
+    ).join('');
+
+    // Big Five Chart
+    const traits = results.big_five_scores || {};
+    new Chart(document.getElementById('traitsChart'), {
+        type: 'radar',
+        data: {
+            labels: ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Neuroticism'],
+            datasets: [{
+                label: 'Your Scores',
+                data: [
+                    traits.openness || 3,
+                    traits.conscientiousness || 3,
+                    traits.extraversion || 3,
+                    traits.agreeableness || 3,
+                    traits.neuroticism || 3
+                ],
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: '#6366f1',
+                borderWidth: 2,
+                pointBackgroundColor: '#6366f1'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 5,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Mental Health
+    const mentalHealth = results.mental_health || {};
+    const wellnessIndex = mentalHealth.wellness_index || 50;
+    document.getElementById('mentalWellnessText').textContent = Math.round(wellnessIndex);
+    document.getElementById('mentalWellnessCircle').setAttribute('stroke-dasharray', `${wellnessIndex}, 100`);
+    document.getElementById('mentalHealthStatus').textContent =
+        `Status: ${(mentalHealth.status || 'moderate').charAt(0).toUpperCase() + (mentalHealth.status || 'moderate').slice(1)}`;
+    document.getElementById('mentalHealthDesc').textContent = mentalHealth.status_description || '';
+
+    // Mental Health Recommendations
+    const recsContainer = document.getElementById('mentalHealthRecs');
+    const recommendations = mentalHealth.recommendations || [];
+    recsContainer.innerHTML = recommendations.slice(0, 3).map(rec =>
+        `<div class="recommendation-item ${rec.priority}">
+            <strong>${rec.area}:</strong> ${rec.tip}
+            <div class="small text-muted mt-1"><i class="fas fa-lightbulb me-1"></i>${rec.action}</div>
+        </div>`
+    ).join('');
+
+    // Digital Wellness
+    const digitalWellness = results.digital_wellness || {};
+    document.getElementById('digitalWellnessScore').textContent =
+        Math.round(digitalWellness.wellness_index || 50);
+
+    const riskBadge = document.getElementById('digitalRiskBadge');
+    const riskLevel = digitalWellness.risk_level || 'moderate';
+    riskBadge.textContent = `Risk Level: ${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}`;
+    riskBadge.className = `badge ${riskLevel}`;
+
+    const tipsList = document.getElementById('digitalWellnessTips');
+    const tips = results.digital_wellness_tips || digitalWellness.recommendations || [];
+    tipsList.innerHTML = tips.slice(0, 4).map(tip =>
+        `<li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>${tip}</li>`
+    ).join('');
+
+    document.getElementById('quizResults').style.display = 'block';
+}
+</script>
+{% endblock %}

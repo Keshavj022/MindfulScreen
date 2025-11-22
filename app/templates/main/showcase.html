@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="showcase-container">
+    <div class="showcase-header">
+        <h1><i class="fas fa-display"></i> Live Demo Showcase</h1>
+        <p class="lead">Real-time AI-powered screen analysis demonstration</p>
+        <div id="analysisStatus" class="mt-2"></div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-video"></i> Live Screen Preview</h5>
+                    <span class="badge bg-danger blink" id="recordingBadge" style="display: none;">
+                        <i class="fas fa-circle"></i> Recording
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="showcasePreview" class="showcase-preview">
+                        <canvas id="showcaseCanvas"></canvas>
+                        <div class="showcase-overlay" id="showcaseOverlay">
+                            <i class="fas fa-desktop fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">Click "Start Demo" to begin screen analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-brain"></i> AI Analysis Results</h5>
+                </div>
+                <div class="card-body">
+                    <div class="analysis-result">
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Detected App/Website</label>
+                            <div><span id="detectedApp" class="badge bg-secondary fs-6">-</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Content Type</label>
+                            <div><span id="contentType" class="badge bg-info fs-6">-</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Sentiment</label>
+                            <div><span id="sentiment" class="badge bg-secondary fs-6">-</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Wellness Impact</label>
+                            <div><span id="wellnessImpact" class="badge bg-secondary fs-6">-</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Extracted Text</h5>
+                </div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    <div id="extractedText" class="small">
+                        <span class="text-muted fst-italic">Text will appear here...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Content Description</h5>
+                </div>
+                <div class="card-body">
+                    <p id="contentDescription" class="small text-muted mb-0">
+                        Description will appear here...
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Potential Concerns</h5>
+                </div>
+                <div class="card-body">
+                    <div id="concernsList" class="small">
+                        <span class="text-muted">No concerns detected yet...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-object-group"></i> Detected Elements</h5>
+                </div>
+                <div class="card-body">
+                    <div id="objectsList" class="d-flex flex-wrap gap-1">
+                        <span class="text-muted">Elements will appear here...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Analysis History</h5>
+                </div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    <div id="analysisHistory">
+                        <span class="text-muted">History will appear here...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> App Usage</h5>
+                </div>
+                <div class="card-body" style="height: 250px;">
+                    <canvas id="realtimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-smile"></i> Sentiment Distribution</h5>
+                </div>
+                <div class="card-body" style="height: 250px;">
+                    <canvas id="sentimentLiveChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-layer-group"></i> Content Types</h5>
+                </div>
+                <div class="card-body" style="height: 250px;">
+                    <canvas id="contentLiveChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="showcase-controls">
+        <button id="showcaseStartBtn" class="btn btn-success btn-lg shadow">
+            <i class="fas fa-play"></i> Start Demo
+        </button>
+        <button id="showcaseStopBtn" class="btn btn-danger btn-lg shadow" style="display: none;">
+            <i class="fas fa-stop"></i> Stop Demo
+        </button>
+    </div>
+</div>
+
+<style>
+.showcase-preview {
+    position: relative;
+    min-height: 400px;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.showcase-preview canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0;
+}
+
+.showcase-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(26, 26, 46, 0.9);
+}
+
+.analysis-result {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.5; }
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/showcase.js') }}"></script>
+{% endblock %}

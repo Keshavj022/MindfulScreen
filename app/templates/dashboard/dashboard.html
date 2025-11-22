@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="container-fluid p-4">
+        <!-- Header with Quick Actions -->
+        <div class="dashboard-header mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="dashboard-title">Digital Wellness Dashboard</h2>
+                    <p class="dashboard-subtitle">Your personalized screen time insights and wellness analysis</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('dashboard.insights') }}" class="btn btn-primary">
+                        <i class="fas fa-lightbulb"></i> AI Insights
+                    </a>
+                    <a href="{{ url_for('analyzer.index') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> New Analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid mb-4">
+            <div class="stat-box">
+                <div class="stat-icon-wrapper bg-gradient-blue">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon-wrapper bg-gradient-green">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="avgWellness">0</div>
+                    <div class="stat-label">Wellness Score</div>
+                    <div class="stat-trend" id="wellnessTrend"></div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon-wrapper bg-gradient-purple">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="avgProductivity">0</div>
+                    <div class="stat-label">Productivity</div>
+                    <div class="stat-trend" id="productivityTrend"></div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon-wrapper bg-gradient-orange">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="totalTime">0h</div>
+                    <div class="stat-label">Time Analyzed</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="riskTime">0%</div>
+                    <div class="stat-label">High-Risk Time</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="productiveTime">0%</div>
+                    <div class="stat-label">Productive Time</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="row mb-4">
+            <!-- Left Column - Main Charts -->
+            <div class="col-lg-8">
+                <!-- Wellness & Productivity Trends -->
+                <div class="chart-container mb-4">
+                    <div class="chart-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-chart-line me-2"></i>Wellness & Productivity Trends</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary active" data-range="7">7 Days</button>
+                            <button class="btn btn-outline-secondary" data-range="30">30 Days</button>
+                            <button class="btn btn-outline-secondary" data-range="all">All Time</button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dual Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="chart-container h-100">
+                            <div class="chart-header">
+                                <h5><i class="fas fa-smile me-2"></i>Sentiment Distribution</h5>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="sentimentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container h-100">
+                            <div class="chart-header">
+                                <h5><i class="fas fa-layer-group me-2"></i>Content Categories</h5>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="contentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen Time Heatmap -->
+                <div class="chart-container mb-4">
+                    <div class="chart-header">
+                        <h5><i class="fas fa-calendar-alt me-2"></i>Weekly Activity Heatmap</h5>
+                    </div>
+                    <div class="chart-body">
+                        <div id="heatmapChart"></div>
+                    </div>
+                </div>
+
+                <!-- App Usage Timeline -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h5><i class="fas fa-stream me-2"></i>App Usage Over Time</h5>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="appTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Sidebar -->
+            <div class="col-lg-4">
+                <!-- Quick Insights Card -->
+                <div class="sidebar-section mb-4">
+                    <div class="sidebar-header bg-gradient-primary text-white">
+                        <h5><i class="fas fa-lightbulb me-2"></i>Quick Insights</h5>
+                    </div>
+                    <div class="sidebar-body">
+                        <div id="quickInsights">
+                            <div class="insight-item mb-3">
+                                <div class="d-flex align-items-start">
+                                    <span class="insight-icon bg-success text-white me-2">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    <div>
+                                        <strong>Loading insights...</strong>
+                                        <p class="small text-muted mb-0">Please wait while we analyze your data</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('dashboard.insights') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                            View All AI Insights <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Top Applications -->
+                <div class="sidebar-section mb-4">
+                    <div class="sidebar-header">
+                        <h5><i class="fas fa-mobile-alt me-2"></i>Top Applications</h5>
+                        <small class="text-muted">Click for details</small>
+                    </div>
+                    <div class="sidebar-body">
+                        <div id="appUsageContainer">
+                            <canvas id="appUsageChart"></canvas>
+                        </div>
+                        <div id="appUsageList" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <!-- Daily Goals Progress -->
+                <div class="sidebar-section mb-4">
+                    <div class="sidebar-header">
+                        <h5><i class="fas fa-bullseye me-2"></i>Today's Goals</h5>
+                    </div>
+                    <div class="sidebar-body">
+                        <div class="goal-item mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">Productive Screen Time</span>
+                                <span class="small fw-bold" id="productiveGoalText">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" id="productiveGoalBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="goal-item mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">Limit Social Media</span>
+                                <span class="small fw-bold" id="socialGoalText">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" id="socialGoalBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">Screen Breaks</span>
+                                <span class="small fw-bold" id="breaksGoalText">0/5</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" id="breaksGoalBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wellness Alerts -->
+                <div class="sidebar-section">
+                    <div class="sidebar-header bg-warning text-dark">
+                        <h5><i class="fas fa-bell me-2"></i>Wellness Alerts</h5>
+                    </div>
+                    <div class="sidebar-body">
+                        <div id="wellnessAlerts">
+                            <div class="alert alert-info small mb-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                No alerts at this time
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row - Recent Sessions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-container">
+                    <div class="chart-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-history me-2"></i>Recent Sessions</h5>
+                        <a href="{{ url_for('analyzer.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="chart-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Session</th>
+                                        <th>Date</th>
+                                        <th>Duration</th>
+                                        <th>Wellness</th>
+                                        <th>Productivity</th>
+                                        <th>Top App</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSessions">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            Loading recent sessions...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- App Details Modal -->
+<div class="modal fade" id="appDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAppName">App Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalAppBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.insight-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.goal-item .progress {
+    border-radius: 4px;
+}
+
+.stat-trend {
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.stat-trend.up {
+    color: #10b981;
+}
+
+.stat-trend.down {
+    color: #ef4444;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+
+#heatmapChart {
+    height: 200px;
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

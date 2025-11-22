@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="privacy-document">
+                <h1 class="mb-4"><i class="fas fa-file-contract me-2"></i>Terms of Service</h1>
+                <p class="text-muted mb-4">Effective Date: November 21, 2025 | Version 1.0</p>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> By using MindfulScreen, you agree to these terms. Please read carefully.
+                </div>
+
+                <section class="mb-5">
+                    <h2>1. Acceptance of Terms</h2>
+                    <p>By accessing or using MindfulScreen ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree, you may not use the Service.</p>
+                </section>
+
+                <section class="mb-5">
+                    <h2>2. Description of Service</h2>
+                    <p>MindfulScreen is an AI-powered digital wellness analyzer that:</p>
+                    <ul>
+                        <li>Captures and analyzes your screen activity (with your explicit consent)</li>
+                        <li>Provides wellness and productivity insights</li>
+                        <li>Uses AI (OpenAI GPT-4 Vision) to analyze content</li>
+                        <li>Stores data securely with encryption</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>3. User Responsibilities</h2>
+                    <h4>You agree to:</h4>
+                    <ul>
+                        <li>Provide accurate, current information during registration</li>
+                        <li>Maintain the security of your account credentials</li>
+                        <li>Only record screens you have legal rights to record</li>
+                        <li>Not violate any laws or third-party rights</li>
+                        <li>Not attempt to hack, reverse engineer, or compromise the Service</li>
+                        <li>Not upload malicious content or spam</li>
+                        <li>Respect others' privacy and intellectual property</li>
+                    </ul>
+
+                    <h4>You must NOT:</h4>
+                    <ul class="text-danger">
+                        <li>Record others' screens without their consent</li>
+                        <li>Record copyrighted content you don't own</li>
+                        <li>Record sensitive financial, medical, or confidential information</li>
+                        <li>Use the Service for illegal activities</li>
+                        <li>Share your account with others</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>4. Screen Recording Consent</h2>
+                    <div class="alert alert-info">
+                        <p><strong>IMPORTANT:</strong> Before each recording session, you must:</p>
+                        <ul class="mb-0">
+                            <li>Explicitly grant browser permissions for screen capture</li>
+                            <li>Acknowledge that you have the legal right to record the content</li>
+                            <li>Understand that frames will be sent to OpenAI for analysis</li>
+                            <li>Accept responsibility for the content being recorded</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="mb-5">
+                    <h2>5. Privacy and Data Usage</h2>
+                    <p>Our use of your data is governed by our <a href="{{ url_for('privacy.policy') }}">Privacy Policy</a>. Key points:</p>
+                    <ul>
+                        <li>All frames are encrypted at rest</li>
+                        <li>Frames are sent to OpenAI for AI analysis</li>
+                        <li>You can delete your data anytime</li>
+                        <li>We never sell your personal information</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>6. Third-Party Services</h2>
+                    <p>We use OpenAI's GPT-4 Vision API for content analysis. By using MindfulScreen:</p>
+                    <ul>
+                        <li>You acknowledge frames are sent to OpenAI servers</li>
+                        <li>You agree to OpenAI's <a href="https://openai.com/terms" target="_blank">Terms of Use</a></li>
+                        <li>We are not responsible for OpenAI's data practices (see their <a href="https://openai.com/privacy" target="_blank">Privacy Policy</a>)</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>7. Intellectual Property</h2>
+                    <ul>
+                        <li><strong>Your Content:</strong> You retain ownership of content you record. You grant us a limited license to process and analyze it.</li>
+                        <li><strong>Our Service:</strong> MindfulScreen's code, design, and features are protected by copyright and may not be copied.</li>
+                        <li><strong>AI-Generated Insights:</strong> Analysis results are provided to you for personal use only.</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>8. Disclaimers and Limitations</h2>
+                    <div class="alert alert-warning">
+                        <h4>Wellness Advice Disclaimer</h4>
+                        <p>MindfulScreen provides <strong>informational insights only</strong>. It is NOT:</p>
+                        <ul class="mb-0">
+                            <li>Medical, psychological, or professional advice</li>
+                            <li>A substitute for professional mental health services</li>
+                            <li>Intended to diagnose or treat any condition</li>
+                        </ul>
+                        <p class="mt-2 mb-0"><strong>Always consult qualified professionals for health concerns.</strong></p>
+                    </div>
+
+                    <h4>Service Availability</h4>
+                    <ul>
+                        <li>We provide the Service "AS IS" without warranties</li>
+                        <li>We do not guarantee 100% uptime or accuracy</li>
+                        <li>AI analysis may contain errors or inaccuracies</li>
+                        <li>We may suspend service for maintenance</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>9. Limitation of Liability</h2>
+                    <p>To the maximum extent permitted by law:</p>
+                    <ul>
+                        <li>We are not liable for indirect, incidental, or consequential damages</li>
+                        <li>Our total liability is limited to the amount you paid (if any) in the last 12 months</li>
+                        <li>We are not liable for third-party services (e.g., OpenAI)</li>
+                        <li>You use the Service at your own risk</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>10. Account Termination</h2>
+                    <h4>We may suspend or terminate your account if:</h4>
+                    <ul>
+                        <li>You violate these Terms</li>
+                        <li>You engage in fraudulent or illegal activity</li>
+                        <li>Your account is inactive for an extended period</li>
+                        <li>Required by law</li>
+                    </ul>
+                    <h4>You may:</h4>
+                    <ul>
+                        <li>Delete your account anytime from Settings</li>
+                        <li>Export your data before deletion</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>11. Age Requirement</h2>
+                    <p>You must be at least <strong>18 years old</strong> to use MindfulScreen. By using the Service, you represent that you meet this requirement.</p>
+                </section>
+
+                <section class="mb-5">
+                    <h2>12. Modifications to Terms</h2>
+                    <p>We may update these Terms at any time. We will:</p>
+                    <ul>
+                        <li>Notify you via email or in-app notification</li>
+                        <li>Update the "Effective Date" at the top</li>
+                        <li>Give you the option to reject changes by deleting your account</li>
+                    </ul>
+                    <p>Continued use after changes = acceptance of new Terms.</p>
+                </section>
+
+                <section class="mb-5">
+                    <h2>13. Governing Law</h2>
+                    <p>These Terms are governed by the laws of [Your Jurisdiction]. Disputes will be resolved in [Your Jurisdiction]'s courts.</p>
+                </section>
+
+                <section class="mb-5">
+                    <h2>14. Contact Information</h2>
+                    <p>Questions or concerns about these Terms?</p>
+                    <ul>
+                        <li>Email: legal@mindfulscreen.com</li>
+                        <li>Address: [Your Organization Address]</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2>15. Severability</h2>
+                    <p>If any provision of these Terms is found unenforceable, the remaining provisions continue in full effect.</p>
+                </section>
+
+                <div class="mt-5 pt-4 border-top">
+                    <p class="text-center">
+                        <a href="{{ url_for('privacy.policy') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-shield-alt me-2"></i>Privacy Policy
+                        </a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Accept & Continue
+                        </a>
+                    </p>
+                    <p class="text-muted small text-center mt-3">
+                        Last Updated: November 21, 2025 | Version 1.0
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.privacy-document {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.privacy-document h1 {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.privacy-document h2 {
+    color: #374151;
+    font-weight: 600;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.privacy-document h4 {
+    color: #4b5563;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

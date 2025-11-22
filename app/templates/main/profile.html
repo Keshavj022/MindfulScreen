@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-wrapper">
+    <div class="container-fluid p-4">
+        <div class="row">
+            <!-- Left Column - Profile Info -->
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile Information</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="profile-avatar mb-3">
+                            <i class="fas fa-user-circle fa-5x text-primary"></i>
+                        </div>
+                        <h4 id="profileName">{{ current_user.name }}</h4>
+                        <p class="text-muted">{{ current_user.email }}</p>
+
+                        {% if current_user.personality_type %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-brain me-2"></i>
+                            <strong>Personality:</strong> {{ current_user.personality_type }}
+                        </div>
+                        {% endif %}
+
+                        <div class="profile-stats mt-4">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h4 class="text-primary" id="statSessions">0</h4>
+                                    <small class="text-muted">Sessions</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-success" id="statWellness">0</h4>
+                                    <small class="text-muted">Wellness</small>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-info" id="statHours">0h</h4>
+                                    <small class="text-muted">Analyzed</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Profile</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="profileForm">
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" id="name" value="{{ current_user.name }}">
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Age</label>
+                                    <input type="number" class="form-control" id="age" value="{{ current_user.age or '' }}">
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Gender</label>
+                                    <select class="form-select" id="gender">
+                                        <option value="">Select</option>
+                                        <option value="Male" {% if current_user.gender == 'Male' %}selected{% endif %}>Male</option>
+                                        <option value="Female" {% if current_user.gender == 'Female' %}selected{% endif %}>Female</option>
+                                        <option value="Other" {% if current_user.gender == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Occupation</label>
+                                <input type="text" class="form-control" id="occupation" value="{{ current_user.occupation or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" value="{{ current_user.location or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" value="{{ current_user.phone or '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="passwordForm">
+                            <div class="mb-3">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-key me-2"></i>Change Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Knowledge Graph & More -->
+            <div class="col-lg-8">
+                <!-- Knowledge Graph Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Your Knowledge Graph</h5>
+                        <button class="btn btn-sm btn-outline-light" onclick="refreshKnowledgeGraph()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="knowledgeGraph" style="height: 450px; background: #1a1a2e;"></div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row text-center small">
+                            <div class="col-3"><span class="badge bg-primary me-1"></span> Personal</div>
+                            <div class="col-3"><span class="badge bg-success me-1"></span> Apps</div>
+                            <div class="col-3"><span class="badge bg-warning me-1"></span> Wellness</div>
+                            <div class="col-3"><span class="badge bg-info me-1"></span> Content</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wellness Goals Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Wellness Goals</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="wellnessGoals">
+                            {% if current_user.wellness_goals %}
+                                {% for goal in current_user.wellness_goals %}
+                                <div class="goal-item d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                    <span><i class="fas fa-check-circle text-success me-2"></i>{{ goal }}</span>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeGoal('{{ goal }}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No wellness goals set yet. Add some below!</p>
+                            {% endif %}
+                        </div>
+                        <div class="mt-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newGoal" placeholder="Add a new wellness goal...">
+                                <button class="btn btn-success" onclick="addGoal()">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Suggested goals:</small>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="addSuggestedGoal('Reduce social media to 1 hour/day')">Limit social media</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="addSuggestedGoal('Take a 5-minute break every hour')">Regular breaks</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="addSuggestedGoal('No screens 1 hour before bed')">Better sleep</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="addSuggestedGoal('Spend more time on educational content')">Learn more</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Big Five Personality Traits -->
+                {% if current_user.big_five_scores %}
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Personality Traits</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="personalityChart" height="200"></canvas>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Account Actions -->
+                <div class="card shadow">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Account Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <a href="{{ url_for('privacy.data_settings') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-download me-2"></i>Export My Data
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a href="{{ url_for('privacy.data_settings') }}" class="btn btn-outline-danger w-100">
+                                    <i class="fas fa-trash me-2"></i>Delete Account
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-wrapper {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+
+.profile-avatar {
+    padding: 20px;
+}
+
+.profile-stats {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadProfileStats();
+    loadKnowledgeGraph();
+    {% if current_user.big_five_scores %}
+    loadPersonalityChart();
+    {% endif %}
+});
+
+async function loadProfileStats() {
+    try {
+        const response = await fetch('/dashboard/api/stats');
+        const data = await response.json();
+        document.getElementById('statSessions').textContent = data.total_sessions || 0;
+        document.getElementById('statWellness').textContent = (data.avg_wellness || 0).toFixed(1);
+        const hours = Math.floor((data.total_duration || 0) / 3600);
+        document.getElementById('statHours').textContent = `${hours}h`;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+async function loadKnowledgeGraph() {
+    try {
+        const response = await fetch('/dashboard/api/knowledge-graph');
+        const data = await response.json();
+        const container = document.getElementById('knowledgeGraph');
+
+        if (!data || !data.nodes || data.nodes.length === 0) {
+            container.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                    <div class="text-center">
+                        <i class="fas fa-project-diagram fa-3x mb-3 opacity-50"></i>
+                        <p>Complete your quiz and start analyzing to build your knowledge graph</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        if (typeof vis === 'undefined') {
+            container.innerHTML = `<p class="text-center text-white py-5">Graph: ${data.nodes.length} nodes, ${data.edges.length} connections</p>`;
+            return;
+        }
+
+        const nodes = new vis.DataSet(
+            data.nodes.map(node => ({
+                id: node.id,
+                label: node.label.length > 15 ? node.label.substring(0, 15) + '...' : node.label,
+                title: node.label,
+                color: {
+                    background: getNodeColor(node.type),
+                    border: getNodeBorderColor(node.type),
+                    highlight: { background: getNodeColor(node.type), border: '#fff' }
+                },
+                font: { size: 12, color: '#fff' },
+                size: node.type === 'person' ? 25 : 18
+            }))
+        );
+
+        const edges = new vis.DataSet(
+            data.edges.map(edge => ({
+                from: edge.source,
+                to: edge.target,
+                arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                color: { color: 'rgba(255,255,255,0.3)', highlight: '#6366f1' },
+                width: 1,
+                smooth: { type: 'continuous' }
+            }))
+        );
+
+        new vis.Network(container, { nodes, edges }, {
+            nodes: { shape: 'dot', borderWidth: 2 },
+            physics: {
+                enabled: true,
+                stabilization: { iterations: 150 },
+                barnesHut: {
+                    gravitationalConstant: -3000,
+                    centralGravity: 0.3,
+                    springLength: 120,
+                    springConstant: 0.04
+                }
+            },
+            interaction: { hover: true, tooltipDelay: 100 }
+        });
+    } catch (error) {
+        console.error('Error loading knowledge graph:', error);
+    }
+}
+
+function refreshKnowledgeGraph() {
+    document.getElementById('knowledgeGraph').innerHTML = `
+        <div class="d-flex align-items-center justify-content-center h-100">
+            <div class="spinner-border text-light"></div>
+        </div>
+    `;
+    loadKnowledgeGraph();
+}
+
+function getNodeColor(type) {
+    const colors = {
+        person: '#6366f1', demographic: '#8b5cf6', personality: '#ec4899',
+        trait: '#f59e0b', occupation: '#10b981', location: '#3b82f6',
+        wellness: '#ef4444', metric: '#06b6d4', app: '#14b8a6',
+        content: '#a855f7', goal: '#f97316'
+    };
+    return colors[type] || '#94a3b8';
+}
+
+function getNodeBorderColor(type) {
+    const colors = {
+        person: '#4f46e5', demographic: '#7c3aed', personality: '#db2777',
+        trait: '#d97706', occupation: '#059669', location: '#2563eb',
+        wellness: '#dc2626', metric: '#0891b2', app: '#0d9488',
+        content: '#9333ea', goal: '#ea580c'
+    };
+    return colors[type] || '#64748b';
+}
+
+{% if current_user.big_five_scores %}
+function loadPersonalityChart() {
+    const scores = {{ current_user.big_five_scores | tojson }};
+    const ctx = document.getElementById('personalityChart');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Neuroticism'],
+            datasets: [{
+                label: 'Your Traits',
+                data: [scores.openness || 0, scores.conscientiousness || 0, scores.extraversion || 0, scores.agreeableness || 0, scores.neuroticism || 0],
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: '#6366f1',
+                borderWidth: 2,
+                pointBackgroundColor: '#6366f1'
+            }]
+        },
+        options: { responsive: true, scales: { r: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } } } }
+    });
+}
+{% endif %}
+
+function addGoal() {
+    const goalInput = document.getElementById('newGoal');
+    const goal = goalInput.value.trim();
+    if (goal) {
+        addSuggestedGoal(goal);
+        goalInput.value = '';
+    }
+}
+
+async function addSuggestedGoal(goal) {
+    try {
+        const response = await fetch('/api/wellness-goals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ goal: goal })
+        });
+        if (response.ok) location.reload();
+    } catch (error) {
+        alert('Error adding goal');
+    }
+}
+
+async function removeGoal(goal) {
+    if (!confirm('Remove this goal?')) return;
+    try {
+        const response = await fetch('/api/wellness-goals', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ goal: goal })
+        });
+        if (response.ok) location.reload();
+    } catch (error) {
+        alert('Error removing goal');
+    }
+}
+</script>
+{% endblock %}

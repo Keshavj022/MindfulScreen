@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-line me-2"></i>Your Wellness Progress</h2>
+        <div>
+            {% if weekly_due %}
+            <a href="{{ url_for('assessment.weekly') }}" class="btn btn-primary me-2">
+                <i class="fas fa-calendar-week me-1"></i>Weekly Check-in Due
+            </a>
+            {% endif %}
+            {% if monthly_due %}
+            <a href="{{ url_for('assessment.monthly') }}" class="btn btn-outline-primary">
+                <i class="fas fa-calendar-alt me-1"></i>Monthly Assessment Due
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trend Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Weekly Trend</h6>
+                    {% if weekly_trend == 'improving' %}
+                    <span class="display-6 text-success"><i class="fas fa-arrow-up"></i></span>
+                    <p class="text-success mb-0">Improving</p>
+                    {% elif weekly_trend == 'declining' %}
+                    <span class="display-6 text-danger"><i class="fas fa-arrow-down"></i></span>
+                    <p class="text-danger mb-0">Needs Attention</p>
+                    {% else %}
+                    <span class="display-6 text-warning"><i class="fas fa-minus"></i></span>
+                    <p class="text-warning mb-0">Stable</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Monthly Trend</h6>
+                    {% if monthly_trend == 'improving' %}
+                    <span class="display-6 text-success"><i class="fas fa-arrow-up"></i></span>
+                    <p class="text-success mb-0">Improving</p>
+                    {% elif monthly_trend == 'declining' %}
+                    <span class="display-6 text-danger"><i class="fas fa-arrow-down"></i></span>
+                    <p class="text-danger mb-0">Needs Attention</p>
+                    {% else %}
+                    <span class="display-6 text-warning"><i class="fas fa-minus"></i></span>
+                    <p class="text-warning mb-0">Stable</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Latest Score</h6>
+                    {% if weekly_assessments %}
+                    <span class="display-6 text-primary">{{ weekly_assessments[0].overall_wellness|round|int }}</span>
+                    <p class="text-muted mb-0">/ 100</p>
+                    {% else %}
+                    <span class="display-6 text-muted">--</span>
+                    <p class="text-muted mb-0">No data yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Wellness Over Time</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="progressChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Assessment History Tables -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-week me-2"></i>Weekly Check-ins</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if weekly_assessments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Week</th>
+                                    <th>Score</th>
+                                    <th>Change</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in weekly_assessments %}
+                                <tr>
+                                    <td>{{ a.period_key }}</td>
+                                    <td>
+                                        <span class="badge {% if a.overall_wellness >= 70 %}bg-success{% elif a.overall_wellness >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ a.overall_wellness|round|int }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if a.improvement_score %}
+                                            {% if a.improvement_score > 0 %}
+                                            <span class="text-success">+{{ a.improvement_score|round|int }}</span>
+                                            {% elif a.improvement_score < 0 %}
+                                            <span class="text-danger">{{ a.improvement_score|round|int }}</span>
+                                            {% else %}
+                                            <span class="text-muted">0</span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ a.completed_at.strftime('%b %d') if a.completed_at else '--' }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No weekly check-ins yet</p>
+                        <a href="{{ url_for('assessment.weekly') }}" class="btn btn-primary">Start First Check-in</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Monthly Assessments</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if monthly_assessments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Score</th>
+                                    <th>Change</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in monthly_assessments %}
+                                <tr>
+                                    <td>{{ a.period_key }}</td>
+                                    <td>
+                                        <span class="badge {% if a.overall_wellness >= 70 %}bg-success{% elif a.overall_wellness >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ a.overall_wellness|round|int }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if a.improvement_score %}
+                                            {% if a.improvement_score > 0 %}
+                                            <span class="text-success">+{{ a.improvement_score|round|int }}</span>
+                                            {% elif a.improvement_score < 0 %}
+                                            <span class="text-danger">{{ a.improvement_score|round|int }}</span>
+                                            {% else %}
+                                            <span class="text-muted">0</span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ a.completed_at.strftime('%b %d') if a.completed_at else '--' }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No monthly assessments yet</p>
+                        <a href="{{ url_for('assessment.monthly') }}" class="btn btn-outline-primary">Start First Assessment</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ url_for("assessment.api_progress") }}')
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+
+            const weeklyLabels = data.weekly.map(a => a.period_key);
+            const weeklyScores = data.weekly.map(a => a.overall_wellness);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weeklyLabels,
+                    datasets: [{
+                        label: 'Weekly Wellness',
+                        data: weeklyScores,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            title: { display: true, text: 'Wellness Score' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}
